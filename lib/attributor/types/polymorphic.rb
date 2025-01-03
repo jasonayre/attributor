@@ -16,6 +16,10 @@ module Attributor
       end
     end
 
+    def self.discriminator
+      @discriminator || superclass.discriminator
+    end
+
     def self.given(value, type)
       @types[value] = type
     end
@@ -120,6 +124,8 @@ module Attributor
       :object
     end
 
+    #without the || superclass.discriminator call below, discriminator
+    #is nil, if it's a polymorphic array i.e. Attributor::Collection.of(SomePolymorphicType)
     def self.as_json_schema(**opts)
       base_schema = super(**opts)
 
@@ -131,7 +137,7 @@ module Attributor
           schema
         end,
         discriminator: {
-          propertyName: discriminator,
+          propertyName: discriminator || superclass.discriminator,
           mapping: types.transform_values { |type_class| type_class.json_schema_type }
         }
       }
